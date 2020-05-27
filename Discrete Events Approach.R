@@ -160,8 +160,44 @@ while (min(t0, t1) < maxT) {
 
 # An Insurance Risk Model -------------------------------------------------
 
-nu
-lambda
-mu
-c
+nsim = 1e3
+nu = 10
+lambda = 2/365
+mu = 1/365
+c = 2e3
+n0 = 100
+a0 = 1e6
+maxT = 365
 
+f = function() {max(rnorm(1, mean = 3e5, sd= 4e4),  0)}
+
+npositive = 0
+i = 1
+for (i in 1 : nsim) {
+	t = 0
+	n = n0
+	a = a0
+	I = 1
+	while (t < maxT) {
+		te = t + rexp (1, nu + n*mu + n * lambda)
+		a = a + n * c * (te - t)
+		t = te
+		r = runif(1)
+		if (r <= nu / (nu + n * mu + n * lambda)) {
+			n = n + 1
+		} else if (r <= (nu + n * mu) / (nu + n * mu + n * lambda)) {
+			n = n - 1
+		} else {
+			y = f()
+			if (y > a) {
+				I = 0
+				break
+			} else {
+				a = a - y
+			}
+		}
+	}
+	if (i %% 100 == 0) print(i)
+	npositive = npositive + I 
+}
+npositive / nsim
